@@ -1,0 +1,14 @@
+dist/
+.deploy/
+deploy_tmp/
+node_modules/
+test_screenshot.png
+test_debug.png
+debug_test.js
+isolate_test.js
+debug_built.html
+test_minimal.html
+extracted_js.txt
+gen_md.js
+gen_codes.js
+*.bat

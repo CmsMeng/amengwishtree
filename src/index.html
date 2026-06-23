@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#5B8C5A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="许愿树">
+  <title>🌳 暑假许愿树</title>
+
+  <!-- 内联 manifest.json -->
+  <script>
+  const manifest = {
+    name: '暑假许愿树',
+    short_name: '许愿树',
+    description: '孩子的暑期任务打卡游戏',
+    start_url: '.',
+    display: 'standalone',
+    background_color: '#FFF8F0',
+    theme_color: '#5B8C5A',
+    icons: [{
+      src: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><text y="140" font-size="140">🌳</text></svg>'),
+      sizes: '192x192', type: 'image/svg+xml'
+    }, {
+      src: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><text y="380" font-size="380">🌳</text></svg>'),
+      sizes: '512x512', type: 'image/svg+xml'
+    }]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+  document.querySelector('link[rel="manifest"]')?.setAttribute('href', URL.createObjectURL(blob));
+  </script>
+  <link rel="manifest" href="#">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="tree-girl">
+  <!-- ====== 状态 -1：首次使用欢迎页 ====== -->
+  <div id="state-welcome" class="state-container">
+    <div class="welcome-card">
+      <div class="welcome-icon">🌳</div>
+      <h1 class="welcome-title">暑期许愿树</h1>
+      <p class="welcome-subtitle">用游戏化的方式，让孩子主动完成暑假任务</p>
+      <div class="welcome-flow">
+        <div class="welcome-step"><span>🎯</span><p>任务打卡</p></div>
+        <div class="welcome-arrow">→</div>
+        <div class="welcome-step"><span>💧</span><p>浇水成长</p></div>
+        <div class="welcome-arrow">→</div>
+        <div class="welcome-step"><span>🎁</span><p>解锁奖励</p></div>
+      </div>
+      <button class="btn btn-primary btn-lg btn-full" id="btn-welcome-start">开始使用</button>
+      <p class="welcome-footer">使用即表示同意本工具的隐私说明和免责声明</p>
+    </div>
+  </div>
+
+  <!-- ====== 状态 0：激活码验证页 ====== -->
+  <div id="state-activation" class="state-container">
+    <div class="activation-card">
+      <div class="activation-icon">🌳</div>
+      <h1 class="activation-title">欢迎来到暑期许愿树</h1>
+      <ul class="activation-features">
+        <li>💧 每天完成任务，为许愿树浇水</li>
+        <li>🎲 每日趣味随机任务，每天都有惊喜</li>
+        <li>🎁 坚持浇水成长，解锁爸妈准备的惊喜奖励</li>
+      </ul>
+
+      <!-- 试用状态提示区 -->
+      <div class="trial-status" id="trial-status">
+        <div class="trial-badge" id="trial-badge">🎁 新用户免费试用 3 天</div>
+        <p class="trial-days" id="trial-days-text"></p>
+      </div>
+      <div class="trial-expired hidden" id="trial-expired-msg">
+        <p style="color:var(--color-danger);font-weight:700;margin-bottom:8px">⏰ 试用已到期</p>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">您的数据已保留，输入激活码即可继续使用</p>
+      </div>
+
+      <!-- 试用按钮 -->
+      <button class="btn btn-trial btn-lg btn-full" id="btn-start-trial">
+        🎉 免费试用 3 天
+      </button>
+
+      <!-- 分割线 -->
+      <div class="activation-divider" id="activation-divider">
+        <span>或 输入激活码</span>
+      </div>
+
+      <div class="activation-input-group" id="activation-input-group">
+        <input type="text" id="code-input" class="code-input"
+               placeholder="SUMMER-XXXX-XXXX" maxlength="18" autocomplete="off">
+        <p class="input-hint" id="code-error"></p>
+      </div>
+      <button class="btn btn-primary btn-lg btn-full" id="btn-activate">
+        🔑 验证激活码
+      </button>
+      <p style="text-align:center;font-size:15px;color:var(--color-danger);margin-top:16px;line-height:1.6;font-weight:700">
+        ⚠️ 激活码及所有打卡数据仅保留在当前设备浏览器中<br>更换设备或清除浏览器数据将导致激活和记录永久丢失<br>请在孩子长期使用的设备上激活
+      </p>
+      <p class="activation-footer" style="margin-top:10px">
+        激活码可通过<strong>抖音/小红书搜索 @阿猛｜AI体育逆袭奶爸</strong>获取
+      </p>
+    </div>
+  </div>
+
+  <!-- ====== 状态 1：家长设置向导（7 步） ====== -->
+  <div id="state-setup" class="state-container hidden">
+    <div class="setup-container">
+      <!-- 进度条 -->
+      <div class="setup-progress">
+        <div class="progress-steps" id="progress-steps">
+          <span class="progress-dot active">1</span>
+          <span class="progress-line"></span>
+          <span class="progress-dot">2</span>
+          <span class="progress-line"></span>
+          <span class="progress-dot">3</span>
+          <span class="progress-line"></span>
+          <span class="progress-dot">4</span>
+          <span class="progress-line"></span>
+          <span class="progress-dot">5</span>
+          <span class="progress-line"></span>
+          <span class="progress-dot">6</span>
+          <span class="progress-line"></span>
+          <span class="progress-dot">7</span>
+        </div>
+      </div>
+
+      <!-- 步骤卡片区 -->
+      <div class="setup-card" id="setup-step-content"></div>
+
+      <!-- 导航按钮 -->
+      <div class="setup-nav" id="setup-nav">
+        <button class="btn btn-outline" id="btn-prev">← 上一步</button>
+        <button class="btn btn-primary" id="btn-next">下一步 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== 状态 2：孩子主界面 ====== -->
+  <div id="state-child" class="state-container hidden">
+    <!-- 顶栏 -->
+    <header class="child-header">
+      <span class="header-day">📅 打卡第 <strong id="day-count">1</strong> 天</span>
+      <span class="header-streak">🔥 连续 <strong id="streak-count">0</strong> 天</span>
+      <button class="btn-icon" id="btn-about" title="关于" style="font-size:15px">❓</button>
+      <button class="btn-icon" id="btn-parent-entry" title="家长入口" style="margin-left:-4px">🔒</button>
+    </header>
+
+    <!-- 许愿树区域 -->
+    <section class="tree-section">
+      <h2 class="tree-name" id="tree-name-display">🌳 许愿树</h2>
+      <div class="tree-stage-badge" id="tree-stage-badge">🌰 种子期</div>
+      <div class="tree-canvas" id="tree-canvas">
+        <!-- SVG / Canvas 许愿树在此渲染 -->
+        <div class="tree-placeholder">🌱</div>
+      </div>
+      <div class="tree-progress-bar">
+        <div class="tree-progress-fill" id="tree-progress-fill" style="width: 0%"></div>
+      </div>
+    </section>
+
+    <!-- 今日任务卡片（合并） -->
+    <section class="task-card" id="task-card">
+      <div class="task-card-header">
+        <h3>🎯 今日任务</h3>
+        <span class="task-water-today" id="water-today">💧 今日已收集 0 滴</span>
+      </div>
+
+      <!-- 学科任务 -->
+      <div class="task-row" id="task-homework">
+        <span class="task-row-icon">📖</span>
+        <span class="task-row-label">学科作业</span>
+        <span class="task-row-status" id="hw-status"></span>
+        <button class="btn btn-xs btn-outline task-row-btn" id="btn-hw-detail">计时</button>
+      </div>
+      <!-- 学科列表（主界面直显） -->
+      <div class="hw-chips-row" id="hw-chips"></div>
+
+      <!-- 运动任务 -->
+      <div class="task-row" id="task-exercise">
+        <span class="task-row-icon">🏃</span>
+        <span class="task-row-label">今日运动</span>
+        <span class="task-row-desc" id="ex-desc">—</span>
+        <div class="task-row-actions">
+          <button class="btn btn-xs btn-outline" id="btn-ex-swap">换一个</button>
+          <button class="btn btn-xs btn-primary" id="btn-ex-done">✅ 完成</button>
+        </div>
+      </div>
+
+      <!-- 随机任务 -->
+      <div class="task-row" id="task-random">
+        <span class="task-row-icon">🎲</span>
+        <span class="task-row-label">随机任务</span>
+        <span class="task-row-desc" id="rd-desc">—</span>
+        <div class="task-row-actions">
+          <button class="btn btn-xs btn-outline" id="btn-rd-swap">换一个</button>
+          <button class="btn btn-xs btn-primary" id="btn-rd-done">✅ 完成</button>
+        </div>
+      </div>
+
+      <!-- 特长任务（条件显示） -->
+      <div class="task-row hidden" id="task-talent">
+        <span class="task-row-icon">🎵</span>
+        <span class="task-row-label">今日特长</span>
+        <span class="task-row-desc" id="ta-desc">—</span>
+        <button class="btn btn-xs btn-primary" id="btn-ta-done">✅ 完成</button>
+      </div>
+    </section>
+
+    <!-- 荣誉墙入口 -->
+    <section class="honor-entry">
+      <button class="btn btn-outline btn-full" id="btn-honor-wall">
+        🏆 我的荣誉（<span id="badge-count">0</span> 枚徽章）
+      </button>
+    </section>
+
+    <!-- 已解锁奖项 -->
+    <section class="awards-bar" id="awards-bar"></section>
+  </div>
+
+  <!-- ====== 状态 3：家长管理面板 ====== -->
+  <div id="state-parent" class="state-container hidden">
+    <!-- 密码门 -->
+    <div class="parent-gate" id="parent-gate">
+      <div class="gate-card">
+        <h2>🔒 家长验证</h2>
+        <p class="gate-hint">请输入家长密码</p>
+        <div class="pin-input-row" id="pin-inputs">
+          <input type="password" maxlength="1" class="pin-dot" inputmode="numeric" pattern="[0-9]">
+          <input type="password" maxlength="1" class="pin-dot" inputmode="numeric" pattern="[0-9]">
+          <input type="password" maxlength="1" class="pin-dot" inputmode="numeric" pattern="[0-9]">
+          <input type="password" maxlength="1" class="pin-dot" inputmode="numeric" pattern="[0-9]">
+          <input type="password" maxlength="1" class="pin-dot" inputmode="numeric" pattern="[0-9]">
+          <input type="password" maxlength="1" class="pin-dot" inputmode="numeric" pattern="[0-9]">
+        </div>
+        <p class="gate-error hidden" id="gate-error">密码错误，还剩 3 次机会</p>
+        <p class="gate-lockout hidden" id="gate-lockout"></p>
+        <button class="btn btn-outline btn-full" id="btn-gate-back">← 返回主界面</button>
+      </div>
+    </div>
+
+    <!-- 管理面板主体 -->
+    <div class="parent-panel hidden" id="parent-panel-body">
+      <div class="parent-header">
+        <button class="btn btn-outline btn-sm" id="btn-parent-exit">← 返回</button>
+        <h2>📋 家长管理</h2>
+        <span class="parent-auto-exit" id="parent-timer"></span>
+      </div>
+
+      <!-- 仪表盘 -->
+      <div class="parent-dashboard" id="parent-dashboard">
+        <div class="dash-card">
+          <div class="dash-stat"><span class="dash-num" id="dash-drops">0</span><span class="dash-unit">滴</span></div>
+          <div class="dash-label">总水滴</div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-stat"><span class="dash-num" id="dash-stage">🌰</span></div>
+          <div class="dash-label">当前阶段</div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-stat"><span class="dash-num" id="dash-streak">0</span><span class="dash-unit">天</span></div>
+          <div class="dash-label">连续打卡</div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-stat"><span class="dash-num" id="dash-badges">0</span><span class="dash-unit">枚</span></div>
+          <div class="dash-label">已获徽章</div>
+        </div>
+      </div>
+
+      <!-- 设置列表 -->
+      <div class="parent-menu" id="parent-menu">
+        <button class="menu-item" data-panel="password">🔒 修改密码</button>
+        <button class="menu-item" data-panel="subjects">📚 学科设置</button>
+        <button class="menu-item" data-panel="exercise">🏃 运动设置</button>
+        <button class="menu-item" data-panel="random">🎲 随机任务设置</button>
+        <button class="menu-item" data-panel="talent">🎵 特长任务设置</button>
+        <button class="menu-item" data-panel="tree">🌳 许愿树设置</button>
+        <button class="menu-item" data-panel="awards">🎁 奖项设置</button>
+        <button class="menu-item hidden" data-panel="postmax" id="menu-postmax">🌳 满级奖项设置</button>
+        <button class="menu-item" id="menu-sound-toggle">🔊 音效开关：开</button>
+        <button class="menu-item" data-panel="reset">🔄 重置数据</button>
+      </div>
+
+      <!-- 设置详情面板（动态渲染） -->
+      <div class="parent-detail hidden" id="parent-detail"></div>
+    </div>
+  </div>
+
+  <!-- ====== 全局 UI 层 ====== -->
+  <!-- Toast 消息 -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- 通用遮罩弹窗 -->
+  <div class="modal-overlay hidden" id="modal-overlay">
+    <div class="modal-card" id="modal-card"></div>
+  </div>
+
+  <!-- 徽章解锁弹窗 -->
+  <div class="badge-popup hidden" id="badge-popup">
+    <div class="badge-popup-bg"></div>
+    <div class="badge-popup-content">
+      <div class="badge-popup-icon" id="badge-popup-icon"></div>
+      <div class="badge-popup-name" id="badge-popup-name"></div>
+      <div class="badge-popup-text" id="badge-popup-text"></div>
+    </div>
+  </div>
+
+  <!-- 撒花/粒子容器 -->
+  <div class="confetti-container hidden" id="confetti-container"></div>
+
+  <!-- 水滴飞入容器 -->
+  <div class="drop-fly-layer" id="drop-fly-layer"></div>
+
+  <!-- 关于弹窗 -->
+  <div class="about-overlay hidden" id="about-overlay">
+    <div class="about-panel">
+      <div class="about-header">
+        <h2>📋 关于许愿树</h2>
+        <button class="about-close" id="about-close">✕</button>
+      </div>
+      <div class="about-tabs">
+        <button class="about-tab active" data-tab="0">📖 使用说明</button>
+        <button class="about-tab" data-tab="1">🔒 隐私说明</button>
+        <button class="about-tab" data-tab="2">⚠️ 免责声明</button>
+      </div>
+      <div class="about-content" id="about-content"></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <span class="footer-text">© 2026 暑期许愿树 · 阿猛｜AI体育逆袭奶爸</span>
+    <span class="footer-divider">·</span>
+    <span class="footer-text">所有数据仅保存在您的设备中</span>
+    <span class="footer-divider">·</span>
+    <a class="footer-link" data-tab="1">隐私说明</a>
+    <span class="footer-divider">·</span>
+    <a class="footer-link" data-tab="2">免责声明</a>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
