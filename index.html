@@ -3498,41 +3498,60 @@ const RANDOM_TASK_POOL = {
   社交: ['给亲人打一个问候电话', '帮爸爸/妈妈倒一杯水并说辛苦了', '教爸爸/妈妈一个技能', '对家人说一句真心赞美', '和家人分享一件今天开心的事', '和邻居小朋友分享零食'],
 };
 
-/** 从运动库随机抽取今日运动 */
+/** 从运动库随机抽取今日运动（2天内不重复） */
 function pickRandomExercise(data) {
   const settings = data.exerciseSettings || {};
-  const names = Object.keys(settings);
+  let names = Object.keys(settings);
   if (names.length === 0) return { name: '跳绳', count: 100, unit: '个' };
-  const idx = Math.floor(Math.random() * names.length);
-  const name = names[idx];
-  // 随机数用于视觉效果，允许 Math.random
+
+  // 排除最近2天的运动
+  const recent = data.stats._recentExercises || [];
+  let pool = names.filter(n => !recent.includes(n));
+  if (pool.length === 0) pool = names; // 项目太少时允许重复
+
+  const idx = Math.floor(Math.random() * pool.length);
+  const name = pool[idx];
+
+  // 记录最近2天
+  recent.unshift(name);
+  if (recent.length > 2) recent.pop();
+  data.stats._recentExercises = recent;
+
   return { name, count: settings[name].count, unit: settings[name].unit || '个' };
 }
 
-/** 从随机任务池抽取（四类混合，权重均等） */
+/** 从随机任务池抽取（四类混合，权重均等；2天内不重复具体任务） */
 function pickRandomQuest(data) {
   const cats = data.randomTaskCategories || ['家务', '探索', '创造', '社交'];
   const avail = cats.filter(c => RANDOM_TASK_POOL[c] && RANDOM_TASK_POOL[c].length > 0);
   if (avail.length === 0) return { cat: '家务', text: '扫地（客厅）' };
-  // 连续 3 天同类型强制换类
-  let cat;
-  if (data.dailyTasks.randomTaskCat && data.stats._lastRandomCats) {
-    const last = data.stats._lastRandomCats || [];
-    if (last.length >= 3 && last.every(c => c === last[0]) && last[0] === data.dailyTasks.randomTaskCat) {
-      const others = avail.filter(c => c !== last[0]);
-      cat = others[Math.floor(Math.random() * others.length)] || avail[0];
-    } else {
-      cat = avail[Math.floor(Math.random() * avail.length)];
-    }
-  } else {
-    cat = avail[Math.floor(Math.random() * avail.length)];
-  }
-  // 记录最近 3 天类别
-  if (!data.stats._lastRandomCats) data.stats._lastRandomCats = [];
-  data.stats._lastRandomCats.push(cat);
-  if (data.stats._lastRandomCats.length > 3) data.stats._lastRandomCats.shift();
-  const pool = RANDOM_TASK_POOL[cat];
-  const text = pool[Math.floor(Math.random() * pool.length)];
+
+  // 记录最近类别 + 具体任务
+  const recentCats = data.stats._lastRandomCats || [];
+  const recentItems = data.stats._recentQuests || [];
+
+  // 选择类别：排除最近2天选过的类别（有足够类别时）
+  let catPool = avail.filter(c => !recentCats.includes(c));
+  if (catPool.length === 0) catPool = avail;
+
+  let cat = catPool[Math.floor(Math.random() * catPool.length)];
+
+  // 选择具体任务：排除最近2天选过的任务
+  const taskPool = RANDOM_TASK_POOL[cat];
+  let itemPool = taskPool.filter(t => !recentItems.includes(t));
+  if (itemPool.length === 0) itemPool = taskPool;
+
+  const text = itemPool[Math.floor(Math.random() * itemPool.length)];
+
+  // 记录
+  recentCats.unshift(cat);
+  if (recentCats.length > 2) recentCats.pop();
+  data.stats._lastRandomCats = recentCats;
+
+  recentItems.unshift(text);
+  if (recentItems.length > 2) recentItems.pop();
+  data.stats._recentQuests = recentItems;
+
   return { cat, text };
 }
 
@@ -4422,12 +4441,16 @@ function completeExercise() {
 function swapExercise() {
   const data = Storage.getAll();
   if (data.dailyTasks.exerciseDone || data.dailyTasks.exerciseSwapCount >= 2) return;
-  // 重抽不包含当前
-  let ex;
-  do { ex = pickRandomExercise(data); }
-  while (ex.name === data.dailyTasks.exerciseTaskToday.split(' ')[0] && Object.keys(data.exerciseSettings).length > 1);
+  // 重抽不包含当前（swap内不记录历史，避免污染2天窗口）
+  const settings = data.exerciseSettings || {};
+  let names = Object.keys(settings);
+  if (names.length <= 1) return;
+  const curName = data.dailyTasks.exerciseTaskToday.split(' ')[0];
+  let pool = names.filter(n => n !== curName);
+  if (pool.length === 0) pool = names;
+  const name = pool[Math.floor(Math.random() * pool.length)];
   data.dailyTasks.exerciseSwapCount++;
-  data.dailyTasks.exerciseTaskToday = ex.name + ' ' + ex.count + (ex.unit || '个');
+  data.dailyTasks.exerciseTaskToday = name + ' ' + settings[name].count + (settings[name].unit || '个');
   Storage._save();
   renderChildUI(data);
 }
@@ -4449,12 +4472,18 @@ function completeRandomTask() {
 function swapRandomTask() {
   const data = Storage.getAll();
   if (data.dailyTasks.randomDone || data.dailyTasks.randomSwapCount >= 2) return;
-  let rd;
-  do { rd = pickRandomQuest(data); }
-  while (rd.text === data.dailyTasks.randomTaskToday);
+  // 重抽不包含当前（swap不记录历史，避免污染2天窗口）
+  const cats = data.randomTaskCategories || ['家务', '探索', '创造', '社交'];
+  const avail = cats.filter(c => RANDOM_TASK_POOL[c] && RANDOM_TASK_POOL[c].length > 0);
+  if (avail.length === 0) return;
+  const cat = avail[Math.floor(Math.random() * avail.length)];
+  const taskPool = RANDOM_TASK_POOL[cat];
+  let itemPool = taskPool.filter(t => t !== data.dailyTasks.randomTaskToday);
+  if (itemPool.length === 0) itemPool = taskPool;
+  const text = itemPool[Math.floor(Math.random() * itemPool.length)];
   data.dailyTasks.randomSwapCount++;
-  data.dailyTasks.randomTaskToday = rd.text;
-  data.dailyTasks.randomTaskCat = rd.cat;
+  data.dailyTasks.randomTaskToday = text;
+  data.dailyTasks.randomTaskCat = cat;
   Storage._save();
   renderChildUI(data);
 }
