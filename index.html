@@ -4363,7 +4363,8 @@ function addWaterDrop(n) {
   }
 
   const bonus = dt.luckyDay ? 2 : 1;
-  const actual = data.postMaxMode
+  // 满级模式或幸运日可突破每日上限
+  const actual = (data.postMaxMode || dt.luckyDay)
     ? n * bonus
     : Math.min(n * bonus, DAILY_MAX_DROPS - dt.waterToday);
 
