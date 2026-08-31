@@ -1,5 +1,5 @@
 /* ==============================================
-   暑假许愿树 PWA — 核心逻辑
+   新学期打卡许愿树 PWA — 核心逻辑
    Session 1: 状态机 + 数据层 + 激活码完整实现
    ============================================== */
 
@@ -704,7 +704,7 @@ DOM.btnActivate.addEventListener('click', () => {
 // 7. 设置向导模块（完整实现）
 // ============================================
 
-/** 预设学科 */
+/** 预设打卡类别（学科） */
 const PRESET_SUBJECTS = ['语文', '数学', '英语', '科学', '物理', '化学', '生物', '地理', '历史', '政治'];
 
 /** 分龄默认运动库 */
@@ -737,7 +737,7 @@ const SETUP_STEPS = [
   { title: '设置家长密码', desc: '用于进入管理面板，请牢记' },
   { title: '许愿树风格 & 命名', desc: '选择孩子喜欢的树型，给树取个名字' },
   { title: '任务强度选择', desc: '决定许愿树完全成长需要的总水滴数' },
-  { title: '学科设置', desc: '设置暑假需要打卡的学科' },
+  { title: '打卡类别', desc: '设置新学期需要打卡的类别' },
   { title: '运动任务难度', desc: '调整每项运动的数量要求' },
   { title: '设置奖励', desc: '为孩子设置成长奖励' },
   { title: '确认设置', desc: '' },
@@ -854,9 +854,9 @@ function renderStep2_TreeStyle(body) {
 // ----- 第 3 步：任务强度 -----
 function renderStep3_Intensity(body) {
   const modes = [
-    { key: 60, icon: '🌱', name: '轻松模式', drops: 60, days: '12-15', scene: '低年级、暑期较短' },
+    { key: 60, icon: '🌱', name: '轻松模式', drops: 60, days: '12-15', scene: '低年级、学期较短' },
     { key: 100, icon: '🌿', name: '标准模式', drops: 100, days: '20-25', scene: '默认推荐' },
-    { key: 150, icon: '🌳', name: '挑战模式', drops: 150, days: '30-35', scene: '高年级、暑期较长' },
+    { key: 150, icon: '🌳', name: '挑战模式', drops: 150, days: '30-35', scene: '高年级、学期较长' },
   ];
   const isCustom = setupData.stageMode !== 'auto' || ![60, 100, 150].includes(setupData.treeTotalDrops);
   let html = '<label class="input-label">选择任务强度</label><div class="intensity-options">';
@@ -902,17 +902,17 @@ function renderStep3_Intensity(body) {
   };
 }
 
-// ----- 第 4 步：学科设置 -----
+// ----- 第 4 步：打卡类别 -----
 function renderStep4_Subjects(body) {
   const selected = new Set(setupData.subjects);
-  let html = '<label class="input-label">选择学科（点击选中/取消）</label><div class="chip-row">';
+  let html = '<label class="input-label">选择打卡类别（点击选中/取消）</label><div class="chip-row">';
   PRESET_SUBJECTS.forEach(sub => {
     html += '<span class="chip' + (selected.has(sub) ? ' selected' : '') + '" data-subj="' + sub + '">' + sub + '</span>';
   });
   html += '</div>';
   // 自定义学科
-  html += '<div class="form-group" style="margin-top:14px"><label class="input-label">自定义学科（最多 3 个）</label>' +
-    '<div style="display:flex;gap:8px"><input type="text" id="custom-subj-inp" placeholder="输入学科名称" maxlength="8">' +
+  html += '<div class="form-group" style="margin-top:14px"><label class="input-label">自定义类别（最多 3 个）</label>' +
+    '<div style="display:flex;gap:8px"><input type="text" id="custom-subj-inp" placeholder="输入类别名称" maxlength="8">' +
     '<button class="btn btn-sm btn-outline" id="btn-add-subj">添加</button></div></div>' +
     '<div class="chip-row" id="custom-chip-row" style="margin-top:8px">';
   (setupData.customSubjects || []).forEach(s => {
@@ -941,11 +941,11 @@ function renderStep4_Subjects(body) {
     const val = inp.value.trim();
     if (!val) return;
     if ((setupData.customSubjects || []).length >= 3) {
-      body.querySelector('#subj-error').textContent = '最多添加 3 个自定义学科';
+      body.querySelector('#subj-error').textContent = '最多添加 3 个自定义类别';
       return;
     }
     if ((setupData.customSubjects || []).includes(val) || PRESET_SUBJECTS.includes(val)) {
-      body.querySelector('#subj-error').textContent = '学科重复';
+      body.querySelector('#subj-error').textContent = '类别重复';
       return;
     }
     setupData.customSubjects = [...(setupData.customSubjects || []), val];
@@ -976,7 +976,7 @@ function renderStep5_Exercise(body) {
   grades.forEach(g => {
     html += '<button class="btn btn-sm ' + (g === curGrade ? 'btn-primary' : 'btn-outline') + ' grade-btn" data-grade="' + g + '">' + g + '</button>';
   });
-  html += '</div><label class="input-label">调整每项运动数量（点击 ✕ 可删除）</label><div id="ex-list">';
+  html += '</div><label class="input-label">调整每项运动数量（每天随机抽 1 项）</label><div id="ex-list">';
   const keys = Object.keys(exercises);
   keys.forEach(name => {
     const ex = exercises[name];
@@ -1098,7 +1098,7 @@ function renderStep7_Summary(body) {
         '<li>🔒 家长密码：' + '●'.repeat((d.parentPassword || '').length) + '</li>' +
         '<li>🌳 树型风格：' + treeLabel + '</li>' +
         '<li>💧 总目标水滴：' + d.treeTotalDrops + ' 滴（' + modeLabel + '）</li>' +
-        '<li>📚 学科：' + d.subjects.length + ' 科（' + d.subjects.join('、') + '）</li>' +
+        '<li>📚 打卡类别：' + d.subjects.length + ' 项（' + d.subjects.join('、') + '）</li>' +
         '<li>🏃 运动项目：' + Object.keys(d.exerciseSettings).length + ' 项</li>' +
         '<li>🎁 奖项：' + (d.awards.length || 0) + ' 个</li>' +
       '</ul>' +
@@ -1145,7 +1145,7 @@ function validateStep(step) {
     }
     case 4: {
       if (setupData.subjects.length === 0) {
-        const err = $('#subj-error'); if (err) err.textContent = '至少选择 1 个学科'; return false;
+        const err = $('#subj-error'); if (err) err.textContent = '至少选择 1 个类别'; return false;
       }
       return true;
     }
@@ -1212,47 +1212,83 @@ DOM.btnPrev.addEventListener('click', setupPrev);
 
 // ----- 随机任务池 -----
 const RANDOM_TASK_POOL = {
-  家务: ['扫地（客厅）', '拖地（厨房）', '收拾垃圾桶', '餐后擦桌子', '叠衣服', '整理自己书桌', '给植物浇水', '帮家人盛饭'],
-  探索: ['去户外找一个不认识的植物或昆虫并查名字', '用手机拍一张今天最美的照片', '观察天空的云并画下来', '找一片最喜欢的叶子做成书签'],
-  创造: ['用家里的废旧物品做一个小玩具', '画一幅画送给家人', '用乐高/积木搭一个作品'],
-  社交: ['给亲人打一个问候电话', '帮爸爸/妈妈倒一杯水并说辛苦了', '教爸爸/妈妈一个技能', '对家人说一句真心赞美', '和家人分享一件今天开心的事', '和邻居小朋友分享零食'],
+  家务: ['扫地（客厅）', '拖地（厨房）', '收拾垃圾桶', '餐后擦桌子', '叠衣服', '整理自己书桌', '帮家人盛饭', '整理自己的书包', '清洗自己的水杯', '睡前把第二天要穿的衣服准备好'],
+  探索: ['去户外找一个不认识的植物或昆虫并查名字', '用手机拍一张今天最美的照片', '观察天空的云并画下来', '找一片最喜欢的叶子做成书签', '预习明天要学的一篇课文并提一个问题', '找一个课本外的新成语并查意思', '观察今晚的月亮并画出它的形状'],
+  创造: ['用家里的废旧物品做一个小玩具', '画一幅画送给家人', '用乐高/积木搭一个作品', '用彩纸设计一张新学期课表', '画一幅新学期第一天的画', '给课本包一个漂亮的书皮'],
+  社交: ['给亲人打一个问候电话', '教爸爸/妈妈一个技能', '对家人说一句真心赞美', '和家人分享一件今天开心的事', '和邻居小朋友分享零食', '给一位同学讲一个假期里的趣事', '和同学约定一件明天一起做的事', '主动向老师或同学微笑问好'],
 };
 
-/** 从运动库随机抽取今日运动 */
+/** 计算某类别的有效任务池：默认 + 自定义 − 已删除（抽取与展示共用） */
+function getQuestPool(data, cat) {
+  const base = RANDOM_TASK_POOL[cat] || [];
+  const extras = (data._customRandomTasks && data._customRandomTasks[cat]) || [];
+  const removed = (data._removedRandomTasks && data._removedRandomTasks[cat]) || [];
+  const merged = [];
+  base.concat(extras).forEach(t => {
+    if (!removed.includes(t) && !merged.includes(t)) merged.push(t);
+  });
+  return merged;
+}
+
+/** 从运动库随机抽取今日运动（2天内不重复） */
 function pickRandomExercise(data) {
   const settings = data.exerciseSettings || {};
-  const names = Object.keys(settings);
+  let names = Object.keys(settings);
   if (names.length === 0) return { name: '跳绳', count: 100, unit: '个' };
-  const idx = Math.floor(Math.random() * names.length);
-  const name = names[idx];
-  // 随机数用于视觉效果，允许 Math.random
+
+  // 排除最近2天的运动
+  const recent = data.stats._recentExercises || [];
+  let pool = names.filter(n => !recent.includes(n));
+  if (pool.length === 0) pool = names; // 项目太少时允许重复
+
+  const idx = Math.floor(Math.random() * pool.length);
+  const name = pool[idx];
+
+  // 记录最近2天
+  recent.unshift(name);
+  if (recent.length > 2) recent.pop();
+  data.stats._recentExercises = recent;
+
   return { name, count: settings[name].count, unit: settings[name].unit || '个' };
 }
 
-/** 从随机任务池抽取（四类混合，权重均等） */
+/** 从随机任务池抽取（四类混合，权重均等；2天内不重复具体任务） */
 function pickRandomQuest(data) {
   const cats = data.randomTaskCategories || ['家务', '探索', '创造', '社交'];
-  const avail = cats.filter(c => RANDOM_TASK_POOL[c] && RANDOM_TASK_POOL[c].length > 0);
-  if (avail.length === 0) return { cat: '家务', text: '扫地（客厅）' };
-  // 连续 3 天同类型强制换类
-  let cat;
-  if (data.dailyTasks.randomTaskCat && data.stats._lastRandomCats) {
-    const last = data.stats._lastRandomCats || [];
-    if (last.length >= 3 && last.every(c => c === last[0]) && last[0] === data.dailyTasks.randomTaskCat) {
-      const others = avail.filter(c => c !== last[0]);
-      cat = others[Math.floor(Math.random() * others.length)] || avail[0];
-    } else {
-      cat = avail[Math.floor(Math.random() * avail.length)];
-    }
-  } else {
-    cat = avail[Math.floor(Math.random() * avail.length)];
+  const avail = cats.filter(c => getQuestPool(data, c).length > 0);
+  if (avail.length === 0) {
+    // 极端情况：所有类别任务都被删光，回退到默认池
+    const fbCat = cats[0] || '家务';
+    const fbPool = RANDOM_TASK_POOL[fbCat] || RANDOM_TASK_POOL['家务'] || [];
+    return { cat: fbCat, text: fbPool[0] || '整理自己的书桌' };
   }
-  // 记录最近 3 天类别
-  if (!data.stats._lastRandomCats) data.stats._lastRandomCats = [];
-  data.stats._lastRandomCats.push(cat);
-  if (data.stats._lastRandomCats.length > 3) data.stats._lastRandomCats.shift();
-  const pool = RANDOM_TASK_POOL[cat];
-  const text = pool[Math.floor(Math.random() * pool.length)];
+
+  // 记录最近类别 + 具体任务
+  const recentCats = data.stats._lastRandomCats || [];
+  const recentItems = data.stats._recentQuests || [];
+
+  // 选择类别：排除最近2天选过的类别（有足够类别时）
+  let catPool = avail.filter(c => !recentCats.includes(c));
+  if (catPool.length === 0) catPool = avail;
+
+  let cat = catPool[Math.floor(Math.random() * catPool.length)];
+
+  // 选择具体任务：排除最近2天选过的任务
+  const taskPool = getQuestPool(data, cat);
+  let itemPool = taskPool.filter(t => !recentItems.includes(t));
+  if (itemPool.length === 0) itemPool = taskPool;
+
+  const text = itemPool[Math.floor(Math.random() * itemPool.length)];
+
+  // 记录
+  recentCats.unshift(cat);
+  if (recentCats.length > 2) recentCats.pop();
+  data.stats._lastRandomCats = recentCats;
+
+  recentItems.unshift(text);
+  if (recentItems.length > 2) recentItems.pop();
+  data.stats._recentQuests = recentItems;
+
   return { cat, text };
 }
 
@@ -2064,7 +2100,8 @@ function addWaterDrop(n) {
   }
 
   const bonus = dt.luckyDay ? 2 : 1;
-  const actual = data.postMaxMode
+  // 满级模式或幸运日可突破每日上限
+  const actual = (data.postMaxMode || dt.luckyDay)
     ? n * bonus
     : Math.min(n * bonus, DAILY_MAX_DROPS - dt.waterToday);
 
@@ -2142,12 +2179,16 @@ function completeExercise() {
 function swapExercise() {
   const data = Storage.getAll();
   if (data.dailyTasks.exerciseDone || data.dailyTasks.exerciseSwapCount >= 2) return;
-  // 重抽不包含当前
-  let ex;
-  do { ex = pickRandomExercise(data); }
-  while (ex.name === data.dailyTasks.exerciseTaskToday.split(' ')[0] && Object.keys(data.exerciseSettings).length > 1);
+  // 重抽不包含当前（swap内不记录历史，避免污染2天窗口）
+  const settings = data.exerciseSettings || {};
+  let names = Object.keys(settings);
+  if (names.length <= 1) return;
+  const curName = data.dailyTasks.exerciseTaskToday.split(' ')[0];
+  let pool = names.filter(n => n !== curName);
+  if (pool.length === 0) pool = names;
+  const name = pool[Math.floor(Math.random() * pool.length)];
   data.dailyTasks.exerciseSwapCount++;
-  data.dailyTasks.exerciseTaskToday = ex.name + ' ' + ex.count + (ex.unit || '个');
+  data.dailyTasks.exerciseTaskToday = name + ' ' + settings[name].count + (settings[name].unit || '个');
   Storage._save();
   renderChildUI(data);
 }
@@ -2169,12 +2210,18 @@ function completeRandomTask() {
 function swapRandomTask() {
   const data = Storage.getAll();
   if (data.dailyTasks.randomDone || data.dailyTasks.randomSwapCount >= 2) return;
-  let rd;
-  do { rd = pickRandomQuest(data); }
-  while (rd.text === data.dailyTasks.randomTaskToday);
+  // 重抽不包含当前（swap不记录历史，避免污染2天窗口）
+  const cats = data.randomTaskCategories || ['家务', '探索', '创造', '社交'];
+  const avail = cats.filter(c => getQuestPool(data, c).length > 0);
+  if (avail.length === 0) return;
+  const cat = avail[Math.floor(Math.random() * avail.length)];
+  const taskPool = getQuestPool(data, cat);
+  let itemPool = taskPool.filter(t => t !== data.dailyTasks.randomTaskToday);
+  if (itemPool.length === 0) itemPool = taskPool;
+  const text = itemPool[Math.floor(Math.random() * itemPool.length)];
   data.dailyTasks.randomSwapCount++;
-  data.dailyTasks.randomTaskToday = rd.text;
-  data.dailyTasks.randomTaskCat = rd.cat;
+  data.dailyTasks.randomTaskToday = text;
+  data.dailyTasks.randomTaskCat = cat;
   Storage._save();
   renderChildUI(data);
 }
@@ -2267,7 +2314,7 @@ const BADGE_LIST = [
   { id: 'streak7', icon: '🔥', name: '坚持之星', cond: d => d.stats.streakDays >= 7, text: '连续 7 天打卡，你已经养成了坚持的好习惯！' },
   { id: 'all_hw', icon: '📚', name: '学霸徽章', cond: d => d.dailyTasks.homeworkDone.length >= (d.subjects || []).length && d.subjects.length > 0, text: '单日完成全部学科，知识的大树靠每一天浇灌！' },
   { id: 'lucky', icon: '🍀', name: '幸运之星', cond: d => d.dailyTasks.luckyDay, text: '今天运气真好！获得意外的幸运徽章！' },
-  { id: 'max_tree', icon: '🌳', name: '园丁勋章', cond: d => d.treeStage >= 5, text: '许愿树达到满级！这个暑假，你没有辜负自己！' },
+  { id: 'max_tree', icon: '🌳', name: '园丁勋章', cond: d => d.treeStage >= 5, text: '许愿树达到满级！这个学期，你没有辜负自己！' },
   { id: 'exercise3', icon: '💪', name: '运动达人', cond: d => (d.stats._exerciseStreak || 0) >= 3, text: '连续 3 天完成运动任务，汗水不会骗人！' },
   { id: 'all_task', icon: '🎯', name: '任务大师', cond: d => {
     const dt = d.dailyTasks;
@@ -2463,7 +2510,7 @@ $('#btn-honor-wall').addEventListener('click', showHonorWall);
 // 🌳 许愿树点击互动系统
 // ============================================
 const TREE_QUOTES = [
-  '每天进步一点点，暑假结束大不同！',
+  '每天进步一点点，学期结束大不同！',
   '不是因为厉害才开始，是因为开始了才厉害。',
   '今天的汗水，是明天果实的养分。',
   '你比昨天更棒了，真的！',
@@ -2471,7 +2518,7 @@ const TREE_QUOTES = [
   '小树苗也要喝水才能长大，你也是哦～',
   '每一个认真完成的任务，都会开花结果。',
   '爸爸妈妈为你感到骄傲。',
-  '你已经不是暑假刚开始的那个自己了。',
+  '你已经不是学期刚开始的那个自己了。',
   '继续浇水，奇迹就在路上。',
   '做自己的英雄，不需要和别人比。',
   '今天的努力，会在明天悄悄回报你。',
@@ -2837,7 +2884,7 @@ addWaterDrop = function (n) {
     Storage._save();
     renderChildUI(data);
     updateTaskButtons(data);
-    // 更新暑假天数
+    // 更新打卡天数
     DOM.dayCount.textContent = getCheckinDay();
   }
   return result;
@@ -2853,7 +2900,7 @@ completeExercise = function () {
   _origCompleteExercise();
 };
 
-// ----- 增强 renderChildUI：显示暑假天数 -----
+// ----- 增强 renderChildUI：显示打卡天数 -----
 const _origRenderChildUI = renderChildUI;
 renderChildUI = function (data) {
   _origRenderChildUI(data);
@@ -3091,11 +3138,11 @@ function renderParentPassword(detail, data) {
 function renderParentSubjects(detail, data) {
   const selected = new Set(data.subjects || []);
   const custom = data.customSubjects || [];
-  let html = '<h3>📚 学科设置</h3><div class="chip-row">';
+  let html = '<h3>📚 打卡类别</h3><div class="chip-row">';
   PRESET_SUBJECTS.forEach(sub => {
     html += '<span class="chip' + (selected.has(sub) ? ' selected' : '') + '" data-subj="' + sub + '">' + sub + '</span>';
   });
-  html += '</div><div style="margin-top:10px"><input type="text" id="pp-cust-subj" placeholder="自定义学科（最多3个）" maxlength="8">' +
+  html += '</div><div style="margin-top:10px"><input type="text" id="pp-cust-subj" placeholder="自定义类别（最多3个）" maxlength="8">' +
     '<button class="btn btn-sm btn-outline" id="btn-pp-add-subj" style="margin-left:4px">添加</button></div>' +
     '<div class="chip-row" id="pp-custom-chips" style="margin-top:6px">';
   custom.forEach(s => { html += '<span class="chip custom selected" data-cust="' + s + '">' + s + ' ✕</span>'; });
@@ -3117,7 +3164,7 @@ function renderParentSubjects(detail, data) {
   $('#btn-pp-add-subj').onclick = () => {
     const val = $('#pp-cust-subj').value.trim();
     if (!val) return;
-    if (custom.length >= 3) { $('#pp-subj-err').textContent = '最多 3 个自定义学科'; return; }
+    if (custom.length >= 3) { $('#pp-subj-err').textContent = '最多 3 个自定义类别'; return; }
     if (custom.includes(val) || PRESET_SUBJECTS.includes(val)) { $('#pp-subj-err').textContent = '重复'; return; }
     custom.push(val);
     selected.add(val);
@@ -3139,7 +3186,7 @@ function renderParentSubjects(detail, data) {
   });
   $('#btn-pp-subj-save').onclick = () => {
     Storage.update({ subjects: [...selected], customSubjects: custom });
-    showToast('✅ 学科已保存', 'success');
+    showToast('✅ 打卡类别已保存', 'success');
     detail.classList.add('hidden');
   };
   $('#btn-pp-subj-back').onclick = () => { detail.classList.add('hidden'); };
@@ -3217,33 +3264,49 @@ function renderParentExercise(detail, data) {
 
 function renderParentRandom(detail, data) {
   const cats = data.randomTaskCategories || ['家务', '探索', '创造', '社交'];
-  // 允许用户自定义扩充的任务池（存储在 _customRandomTasks）
+  // 用户自定义扩充的任务池（存储在 _customRandomTasks）
   const customTasks = data._customRandomTasks || {};
+  // 用户删除的默认任务（存储在 _removedRandomTasks，可恢复）
+  const removedTasks = data._removedRandomTasks || {};
   const allCats = ['家务', '探索', '创造', '社交'];
   const catIcons = { '家务': '🧹', '探索': '🔍', '创造': '🎨', '社交': '❤️' };
-  let html = '<h3>🎲 随机任务设置</h3><p style="color:var(--text-muted);font-size:13px;margin-bottom:10px">勾选类别 + 查看/自定义任务内容</p>';
+  let html = '<h3>🎲 随机任务设置</h3><p style="color:var(--text-muted);font-size:13px;margin-bottom:10px">勾选类别 + 查看/删除/自定义任务（默认任务删除后可恢复）</p>';
 
   allCats.forEach(c => {
     const checked = cats.includes(c);
+    const pool = getQuestPool(data, c);
     html += '<details style="margin-bottom:8px;border:1px solid #E8DDD4;border-radius:10px;overflow:hidden" ' + (checked ? 'open' : '') + '>' +
       '<summary style="padding:10px;background:#FAF5EF;cursor:pointer;display:flex;align-items:center;gap:8px">' +
-      '<input type="checkbox" class="pp-cat-chk" data-cat="' + c + '" ' + (checked ? 'checked' : '') + ' style="pointer-events:none">' +
+      '<input type="checkbox" class="pp-cat-chk" data-cat="' + c + '" ' + (checked ? 'checked' : '') + '>' +
       '<span>' + (catIcons[c] || '') + ' ' + c + '类</span>' +
-      '<span style="font-size:11px;color:var(--text-muted);margin-left:auto">' + (RANDOM_TASK_POOL[c] ? RANDOM_TASK_POOL[c].length : 0) + ' 项</span></summary>' +
+      '<span style="font-size:11px;color:var(--text-muted);margin-left:auto">' + pool.length + ' 项</span></summary>' +
       '<div style="padding:8px 12px;background:#FFF">' +
       '<div id="pp-rand-items-' + c + '">';
-    // 默认任务
-    const pool = RANDOM_TASK_POOL[c] || [];
-    pool.forEach(t => {
-      html += '<div style="font-size:12px;padding:3px 0;color:var(--text-secondary)">📌 ' + t + '</div>';
+    // 默认任务（可删除，删除后进入下方恢复区）
+    const base = RANDOM_TASK_POOL[c] || [];
+    base.forEach((t, i) => {
+      if ((removedTasks[c] || []).includes(t)) return;
+      html += '<div style="font-size:12px;padding:3px 0;display:flex;align-items:center;gap:4px">' +
+        '<span style="flex:1;color:var(--text-secondary)">📌 ' + t + '</span>' +
+        '<button class="btn btn-xs btn-outline pp-rand-del-default" data-cat="' + c + '" data-idx="' + i + '" style="font-size:10px;padding:0 4px;min-height:20px;color:var(--color-danger);border-color:var(--color-danger)">✕</button></div>';
     });
     // 自定义任务
     const extras = customTasks[c] || [];
     extras.forEach((t, i) => {
       html += '<div style="font-size:12px;padding:3px 0;display:flex;align-items:center;gap:4px">' +
-        '<span style="color:var(--color-primary)">✏️ ' + t + '</span>' +
+        '<span style="flex:1;color:var(--color-primary)">✏️ ' + t + '</span>' +
         '<button class="btn btn-xs btn-outline pp-rand-del" data-cat="' + c + '" data-idx="' + i + '" style="font-size:10px;padding:0 4px;min-height:20px;color:var(--color-danger);border-color:var(--color-danger)">✕</button></div>';
     });
+    // 已删除任务（可恢复）
+    const removed = removedTasks[c] || [];
+    removed.forEach((t, i) => {
+      html += '<div style="font-size:12px;padding:3px 0;display:flex;align-items:center;gap:4px">' +
+        '<span style="flex:1;color:var(--text-muted);text-decoration:line-through">🗑️ ' + t + '</span>' +
+        '<button class="btn btn-xs btn-outline pp-rand-restore" data-cat="' + c + '" data-idx="' + i + '" style="font-size:10px;padding:0 4px;min-height:20px">↩ 恢复</button></div>';
+    });
+    if (base.length + extras.length + removed.length === 0) {
+      html += '<div style="font-size:12px;padding:3px 0;color:var(--text-muted)">（无任务）</div>';
+    }
     html += '</div>' +
       '<div style="display:flex;gap:4px;margin-top:6px;padding-bottom:6px">' +
       '<input type="text" class="pp-rand-new-inp" data-cat="' + c + '" placeholder="自定义' + c + '任务" maxlength="20" style="flex:1;font-size:12px;min-height:32px">' +
@@ -3254,16 +3317,14 @@ function renderParentRandom(detail, data) {
     '<button class="btn btn-outline btn-full" style="margin-top:4px" id="btn-pp-rand-back">← 返回菜单</button>';
   detail.innerHTML = html;
 
-  // 类别开关（点击 summary 中的 checkbox 区域时切换）
+  // summary 交互：点 checkbox 勾选类别，点其余区域展开/折叠
   detail.querySelectorAll('summary').forEach(summary => {
     summary.addEventListener('click', function(e) {
-      const cb = this.querySelector('.pp-cat-chk');
-      if (cb && e.target !== cb) {
-        e.preventDefault(); // 阻止 details 展开/折叠
-        cb.checked = !cb.checked;
-      }
+      if (e.target.type === 'checkbox') return; // checkbox 自己处理
+      e.preventDefault(); // 阻止原生 toggle，手动切换
+      this.parentElement.open = !this.parentElement.open;
     });
-    // 直接点击 checkbox 本身
+    // checkbox 点击只切换勾选，不触发展开
     const cb = this.querySelector('.pp-cat-chk');
     if (cb) {
       cb.addEventListener('click', function(e) { e.stopPropagation(); });
@@ -3277,27 +3338,19 @@ function renderParentRandom(detail, data) {
       const inp = detail.querySelector('.pp-rand-new-inp[data-cat="' + c + '"]');
       const val = (inp.value || '').trim();
       if (!val) return;
+      if ((customTasks[c] || []).includes(val) || (RANDOM_TASK_POOL[c] || []).includes(val)) {
+        showToast('该任务已存在'); return;
+      }
       if (!customTasks[c]) customTasks[c] = [];
       customTasks[c].push(val);
       data._customRandomTasks = customTasks;
       Storage.set('_customRandomTasks', customTasks);
-      // 也更新全局 RANDOM_TASK_POOL（本次会话生效）
-      if (!RANDOM_TASK_POOL._extended) {
-        // 深拷贝一份避免污染原始定义
-        ['家务','探索','创造','社交'].forEach(cat => {
-          if (!RANDOM_TASK_POOL._orig) RANDOM_TASK_POOL._orig = {};
-          if (!RANDOM_TASK_POOL._orig[cat]) RANDOM_TASK_POOL._orig[cat] = [...RANDOM_TASK_POOL[cat]];
-        });
-        RANDOM_TASK_POOL._extended = true;
-      }
-      if (!RANDOM_TASK_POOL[c]) RANDOM_TASK_POOL[c] = [];
-      if (!RANDOM_TASK_POOL[c].includes(val)) RANDOM_TASK_POOL[c].push(val);
       inp.value = '';
       renderParentRandom(detail, Storage.getAll());
     };
   });
 
-  // 删除自定义
+  // 删除自定义（永久）
   detail.querySelectorAll('.pp-rand-del').forEach(btn => {
     btn.onclick = () => {
       const c = btn.dataset.cat;
@@ -3309,17 +3362,37 @@ function renderParentRandom(detail, data) {
     };
   });
 
+  // 删除默认任务（移入已删除列表，可恢复）
+  detail.querySelectorAll('.pp-rand-del-default').forEach(btn => {
+    btn.onclick = () => {
+      const c = btn.dataset.cat;
+      const idx = parseInt(btn.dataset.idx);
+      const t = (RANDOM_TASK_POOL[c] || [])[idx];
+      if (!t) return;
+      if (!data._removedRandomTasks) data._removedRandomTasks = {};
+      if (!data._removedRandomTasks[c]) data._removedRandomTasks[c] = [];
+      if (!data._removedRandomTasks[c].includes(t)) data._removedRandomTasks[c].push(t);
+      Storage.set('_removedRandomTasks', data._removedRandomTasks);
+      renderParentRandom(detail, Storage.getAll());
+    };
+  });
+
+  // 恢复已删除的默认任务
+  detail.querySelectorAll('.pp-rand-restore').forEach(btn => {
+    btn.onclick = () => {
+      const c = btn.dataset.cat;
+      const idx = parseInt(btn.dataset.idx);
+      if (data._removedRandomTasks && data._removedRandomTasks[c]) data._removedRandomTasks[c].splice(idx, 1);
+      Storage.set('_removedRandomTasks', data._removedRandomTasks || {});
+      renderParentRandom(detail, Storage.getAll());
+    };
+  });
+
   $('#btn-pp-rand-save').onclick = () => {
     const sel = []; detail.querySelectorAll('.pp-cat-chk:checked').forEach(cb => sel.push(cb.dataset.cat));
     Storage.set('randomTaskCategories', sel);
     Storage.set('_customRandomTasks', customTasks);
-    // 持久化自定义任务到 RANDOM_TASK_POOL
-    Object.keys(customTasks).forEach(cat => {
-      const extras = customTasks[cat] || [];
-      if (!RANDOM_TASK_POOL._orig) RANDOM_TASK_POOL._orig = {};
-      if (!RANDOM_TASK_POOL._orig[cat]) RANDOM_TASK_POOL._orig[cat] = [...RANDOM_TASK_POOL[cat]];
-      extras.forEach(t => { if (!RANDOM_TASK_POOL[cat].includes(t)) RANDOM_TASK_POOL[cat].push(t); });
-    });
+    Storage.set('_removedRandomTasks', data._removedRandomTasks || {});
     showToast('✅ 已保存', 'success'); detail.classList.add('hidden');
   };
   $('#btn-pp-rand-back').onclick = () => { detail.classList.add('hidden'); };

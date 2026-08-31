@@ -5,12 +5,12 @@
 | 序号 | 激活码 | 状态 | 发给谁 | 激活日期 |
 |------|--------|------|--------|----------|
 | 1 | SUMMER-ZVJ6-Q566 | ✅ 已激活 | 阿猛（本人测试） | 2026-06-23 |
-| 2 | SUMMER-TYKK-Q3RT | 未激活 | | |
-| 3 | SUMMER-C4LP-46DZ | 未激活 | | |
-| 4 | SUMMER-3KGD-GBUH | 未激活 | | |
-| 5 | SUMMER-2VY8-ERCM | 未激活 | | |
-| 6 | SUMMER-NTNC-KMKV | 未激活 | | |
-| 7 | SUMMER-FSVJ-34RJ | 未激活 | | |
+| 2 | SUMMER-TYKK-Q3RT | ✅ 已发出 | 33栋邻居陈 | 2026-07-02 |
+| 3 | SUMMER-C4LP-46DZ | ✅ 已发出 | 24栋石头妈 | 2026-07-02 |
+| 4 | SUMMER-3KGD-GBUH | ✅ 已发出 | 27栋果果妈 | 2026-07-02 |
+| 5 | SUMMER-2VY8-ERCM | ✅ 已发出 | 28栋派派妈 | 2026-07-02 |
+| 6 | SUMMER-NTNC-KMKV | ✅ 已发出 | 20栋安安妈 | 2026-07-02 |
+| 7 | SUMMER-FSVJ-34RJ | ✅ 已发出 | 16栋小T（呈妮妈妈） | 2026-07-02 |
 | 8 | SUMMER-UJFS-C54T | 未激活 | | |
 | 9 | SUMMER-VDAE-7G9T | 未激活 | | |
 | 10 | SUMMER-BNPA-DWB3 | 未激活 | | |

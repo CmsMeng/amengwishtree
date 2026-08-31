@@ -7,30 +7,15 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="许愿树">
-  <title>🌳 暑假许愿树</title>
+  <title>🌳 新学期打卡许愿树</title>
 
-  <!-- 内联 manifest.json -->
-  <script>
-  const manifest = {
-    name: '暑假许愿树',
-    short_name: '许愿树',
-    description: '孩子的暑期任务打卡游戏',
-    start_url: '.',
-    display: 'standalone',
-    background_color: '#FFF8F0',
-    theme_color: '#5B8C5A',
-    icons: [{
-      src: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><text y="140" font-size="140">🌳</text></svg>'),
-      sizes: '192x192', type: 'image/svg+xml'
-    }, {
-      src: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><text y="380" font-size="380">🌳</text></svg>'),
-      sizes: '512x512', type: 'image/svg+xml'
-    }]
-  };
-  const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-  document.querySelector('link[rel="manifest"]')?.setAttribute('href', URL.createObjectURL(blob));
-  </script>
-  <link rel="manifest" href="#">
+  <!-- PNG 树形图标（构建时自动生成） -->
+  <link rel="icon" type="image/png" href="__ICON_PNG__">
+  <link rel="apple-touch-icon" sizes="180x180" href="__ICON_PNG__">
+
+  <!-- manifest（构建时注入 PNG data URI） -->
+  <link rel="manifest" href="data:application/json,%7B%22name%22%3A%22%E6%96%B0%E5%AD%A6%E6%9C%9F%E6%89%93%E5%8D%A1%E8%AE%B8%E6%84%BF%E6%A0%91%22%2C%22short_name%22%3A%22%E8%AE%B8%E6%84%BF%E6%A0%91%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%235B8C5A%22%2C%22theme_color%22%3A%22%235B8C5A%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22__MANIFEST_ICON_PNG__%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D">
+
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="tree-girl">
@@ -38,8 +23,8 @@
   <div id="state-welcome" class="state-container">
     <div class="welcome-card">
       <div class="welcome-icon">🌳</div>
-      <h1 class="welcome-title">暑期许愿树</h1>
-      <p class="welcome-subtitle">用游戏化的方式，让孩子主动完成暑假任务</p>
+      <h1 class="welcome-title">新学期打卡许愿树</h1>
+      <p class="welcome-subtitle">用游戏化的方式，让孩子主动完成新学期任务</p>
       <div class="welcome-flow">
         <div class="welcome-step"><span>🎯</span><p>任务打卡</p></div>
         <div class="welcome-arrow">→</div>
@@ -56,7 +41,7 @@
   <div id="state-activation" class="state-container">
     <div class="activation-card">
       <div class="activation-icon">🌳</div>
-      <h1 class="activation-title">欢迎来到暑期许愿树</h1>
+      <h1 class="activation-title">欢迎来到新学期打卡许愿树</h1>
       <ul class="activation-features">
         <li>💧 每天完成任务，为许愿树浇水</li>
         <li>🎲 每日趣味随机任务，每天都有惊喜</li>
@@ -267,7 +252,7 @@
       <!-- 设置列表 -->
       <div class="parent-menu" id="parent-menu">
         <button class="menu-item" data-panel="password">🔒 修改密码</button>
-        <button class="menu-item" data-panel="subjects">📚 学科设置</button>
+        <button class="menu-item" data-panel="subjects">📚 打卡类别</button>
         <button class="menu-item" data-panel="exercise">🏃 运动设置</button>
         <button class="menu-item" data-panel="random">🎲 随机任务设置</button>
         <button class="menu-item" data-panel="talent">🎵 特长任务设置</button>
@@ -326,7 +311,7 @@
 
   <!-- Footer -->
   <footer class="site-footer">
-    <span class="footer-text">© 2026 暑期许愿树 · 阿猛｜AI体育逆袭奶爸</span>
+    <span class="footer-text">© 2026 新学期打卡许愿树 · 抖音&小红书搜 阿猛｜AI体育逆袭奶爸</span>
     <span class="footer-divider">·</span>
     <span class="footer-text">所有数据仅保存在您的设备中</span>
     <span class="footer-divider">·</span>

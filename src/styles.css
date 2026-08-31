@@ -1,5 +1,5 @@
 /* ==============================================
-   暑假许愿树 PWA — 样式系统
+   新学期打卡许愿树 PWA — 样式系统
    统一 UI 主题（温暖自然风格）
    ============================================== */
 
@@ -818,7 +818,7 @@ input:focus {
 
 .task-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-sm);
   padding: 10px 8px;
   margin: 2px 0;
@@ -848,9 +848,8 @@ input:focus {
   flex: 1;
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.4;
+  word-break: break-all;
 }
 
 .task-row-status {
